@@ -1,0 +1,11 @@
+[webservers_local]
+localhost
+
+[webserver_master:children]
+webservers_local
+
+[webservers:children]
+webservers_local
+
+[inte:children]
+webservers_local

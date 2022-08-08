@@ -1,0 +1,22 @@
+---
+- name: "[{{ project_storage_path }}] Storage folder exists"
+  stat:
+    path: "{{ project_storage_path }}"
+  register: folder
+
+- name: "[{{ item }}] Symlink exists"
+  stat:
+    path: "{{ project_source_path }}/{{ item }}"
+  register: symlink
+
+- name: "[{{ item }}] Remove symlink "
+  file:
+    path: "{{project_source_path}}/{{ item }}"
+    state: absent
+
+- name: "[{{ item }}] Create symlink"
+  file:
+    src: "{{ project_storage_path }}"
+    dest: "{{ project_source_path }}/{{ item }}"
+#    mode:  "u=rwX,g=rX,o=rX"
+    state: link

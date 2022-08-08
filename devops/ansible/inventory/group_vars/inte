@@ -1,0 +1,52 @@
+# Xhprof profiling
+xhfprof_enabled: true
+
+# PHP configuration
+project_php_bin: "/usr/bin/php73"
+
+# Apache configuration
+
+project_delivery_path: "/home/sites_web/client/{{ project_name }}/www"
+project_curent_release: "/home/sites_web/client/{{ project_name }}/www/current"
+project_env_mode: "dev"
+
+# File system settings
+project_delivery_user: suezadm
+project_delivery_group: suezadm
+project_web_user: tsme
+project_web_group: tsme
+
+# Delivery
+build_config: inte
+
+# PHP
+php_fpm_systemd: false
+php_fpm_service: "php-fpm-upgrade_tsme"
+
+# Varnish
+have_varnish_6: true
+
+# memcached
+memcached_service: memcached
+
+
+#User workspace
+users_workspace_path: /home/sites_web/client/upgrade_dev_tsme
+users_apache_conf_path: /etc/lbn/httpd/conf/instances/httpd-0.0.0.0_80/sites/upgrade_tsme_80/dev_users
+users_workspace:
+    'chpyr':
+        name: chpyr
+        alias: chpyr-int.toutsurmoneau.fr
+#        docroot: /home/sites_web/client/upgrade_dev_tsme_2/chpyr/www
+    'chath':
+        name: chath
+        alias: chath-int.toutsurmoneau.fr
+    'olbov':
+        name: olbov
+        alias: olbov-int.toutsurmoneau.fr
+    'pidev':
+        name: pidev
+        alias: pidev-int.toutsurmoneau.fr
+    'winso':
+        name: winso
+        alias: winso-int.toutsurmoneau.fr

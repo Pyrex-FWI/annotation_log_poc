@@ -1,0 +1,21 @@
+---
+- name: "Set permissions on shared folders"
+  file:
+    path: "{{ project_source_path }}/{{ item }}"
+    state: directory
+    owner: "{{ project_web_group }}"
+    group: "{{ project_delivery_user }}"
+    mode:  "u=rwX,g=rwX,o=rX"
+    recurse: yes
+    follow: yes
+  with_items: "{{ light_permissions_folders }}"
+
+- name: "Set permissions on binaries"
+  file:
+    path: "{{ project_source_path }}/{{ item }}"
+    state: directory
+    mode:  "0755"
+    recurse: yes
+    follow: yes
+  with_items:
+    - bin

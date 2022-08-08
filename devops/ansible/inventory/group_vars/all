@@ -1,0 +1,13 @@
+project_name: "tsme-part"
+git_ssh_repository: "ssh://git@github.com/Suezenv/tsme-part.git"
+
+local_project_dir: "{{ playbook_dir | dirname | dirname }}"
+local_build_dir: "{{local_project_dir}}/build"
+
+no_debug_install: "no"
+
+env_pool:
+  - local
+  - inte
+  - preprod
+  - prod

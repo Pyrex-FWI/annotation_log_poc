@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+
+  part-php:
+    image: 3snetregistry.azurecr.io/tsme/php7.3:xdebug-v4
+    working_dir: /usr/var/www
+    hostname: part-php-fpm
+    entrypoint: ["php", "-S", "0.0.0.0:8002", "-t", "public"]
+    volumes:
+      - ./:/usr/var/www/
+      - ./devops/docker/php-fpm/php.ini:/usr/local/etc/php/conf.d/99-php.ini
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/blog.sqlite
+      - MAILER_URL=null://localhost
+      - APP_SECRET=67d829bf61dc5f87a73fd814e2c9f629
+      - APP_DEBUG=1
+    ports:
+      - "8002:8002"
+
+
+
+
+

@@ -1,0 +1,158 @@
+---
+- hosts: webserver_master
+  remote_user: "{{ project_delivery_user }}"
+
+  vars:
+      ansible_user: "{{ project_delivery_user }}"
+      project_delivery_path: "{{ users_workspace_path }}/{{ users_workspace[for_user].name }}"
+      project_source_path: "{{ users_workspace_path }}/{{ users_workspace[for_user].name }}/current"
+      local_releases_dir: "{{ playbook_dir | dirname | dirname }}"
+      build_config: "{{ target_env }}"
+      copy_parameters_yml: true
+      project_storage_path: "/home/sites_web/client/tsme/storage/var"
+      php_fpm_service: "php-fpm-upgrade_tsme"
+      varnish_service_6: "rh-varnish6-varnish"
+      memcached_service: "memcached"
+      light_permissions_folders:
+        - var/logs
+        - var/cache
+        - var/encore
+        - web
+      project_storage_folders:
+        - web/var
+      project_php_bin: /usr/bin/php73
+
+
+  tasks:
+    - fail: msg="You must provide a 'deploy_version' variable in --extra-vars"
+      when: deploy_version is not defined
+    - debug: msg={{deploy_version}}
+
+    - fail: msg="You must provide a 'target_env' variable in --extra-vars"
+      when: target_env is not defined
+    - debug: msg={{target_env}}
+
+    - fail: msg="You must provide a 'for_user' variable in --extra-vars"
+      when: for_user is not defined
+    - debug: msg={{for_user}}
+
+    - debug: msg={{playbook_dir}}
+    - debug: msg={{ users_workspace[for_user] }}
+    - debug: msg={{ project_delivery_path }}
+    - debug: msg={{ project_source_path }}
+    - debug: msg={{ local_releases_dir }}
+
+#    - name: Check existance of release file
+#      file:
+#        path:
+    # Initialize the delivery
+    - name: "Add an empty delivery directory"
+      file:
+        path: "{{ project_delivery_path }}"
+        state: directory
+
+    # Initialize release process
+    - name: Initialize the deploy root and gather facts
+      deploy_helper:
+        path: "{{ project_delivery_path }}"
+        release: "{{ deploy_version | regex_replace('/', '-') }}"
+
+    # Check release folder existance
+    - name: "Check if the release folder already exists"
+      stat:
+        path: "{{ deploy_helper.new_release_path }}"
+      register: release
+
+    - name: "Remove same existing release"
+      file:
+        path: "{{ deploy_helper.new_release_path }}"
+        state: absent
+      when: release.stat.isdir is defined and release.stat.isdir
+
+    # Prepare the release
+    - name: "Add an empty release directory"
+      file:
+        path: "{{ deploy_helper.new_release_path }}"
+        state: directory
+
+    # Prepare the release
+    - name: "Add an unfinished file, to allow cleanup on successful finalize"
+      file:
+        path: "{{ deploy_helper.new_release_path }}/{{ deploy_helper.unfinished_filename }}"
+        state: touch
+
+    # Synchronization of src on the control machine to dest on the remote hosts
+    - unarchive:
+        src: "{{ local_releases_dir }}/{{ deploy_version }}.tar.gz"
+        dest: "{{ deploy_helper.new_release_path }}"
+
+    # Copy parameters file
+    - shell: "cp -r {{ deploy_helper.new_release_path }}/build/config/{{ build_config }}/* {{ deploy_helper.new_release_path }}"
+      when: copy_parameters_yml
+
+#    - name: "Create eZPlatform and Symfony shared folders"
+#      include: "includes/install-shared-folder-tasks.yml"
+#      vars:
+#        project_source_path: "{{ deploy_helper.new_release_path }}"
+#      with_items: "{{ project_shared_folders }}"
+
+    # Permissions settings
+    - include: "includes/permissions-light-tasks.yml"
+      become: true
+      vars:
+        project_source_path: "{{ deploy_helper.new_release_path }}"
+
+    # create storage link
+    - name: "Create eZPlatform and Symfony storage folders"
+      include: "includes/install-storage-folder-tasks.yml"
+      vars:
+        project_source_path: "{{ deploy_helper.new_release_path }}"
+      with_items: "{{ project_storage_folders }}"
+
+    # Clear caches
+    - include: "includes/clear-cache-tasks.yml"
+      vars:
+        project_source_path: "{{ deploy_helper.new_release_path }}"
+
+    # Build assets
+#    - include: "includes/build-assets.yml"
+#      vars:
+#        project_source_path: "{{ deploy_helper.new_release_path }}"
+#
+    - debug:
+        msg: "{{ project_source_path }}"
+
+    - debug:
+        msg: "{{ deploy_helper.new_release }}"
+#
+    # Activate the release
+    - name: "Switching the symlink"
+      deploy_helper:
+        path: "{{ project_delivery_path }}"
+        release: "{{ deploy_helper.new_release }}"
+        state: finalize
+        clean: false
+
+    # Activate the release
+    - name: "Clean up"
+      deploy_helper:
+        path: "{{ project_delivery_path }}"
+        release: "{{ deploy_helper.new_release }}"
+        state: clean
+        keep_releases: "0"
+      become: true
+
+    # Restart varnish-6
+    - name: "Restart varnish6"
+      service: name="{{ varnish_service_6 }}" state=restarted enabled=yes
+      become: true
+
+    # Restart memcached
+    - name: "Restart memcached"
+      service: name="{{ memcached_service }}" state=restarted enabled=yes
+      become: true
+
+    # Restart php-fpm
+    - name: "Restart php-fpm"
+      command: "/etc/init.d/{{ php_fpm_service }} restart"
+      become: true

@@ -1,0 +1,20 @@
+execution:
+- scenario: simple
+
+#modules:
+#  jmeter:
+#    path: /usr/local/bin/jmeter #specific for disable ssl check
+#    gui: true
+#    properties:
+#      CSV_PATH: ${BASE_DIR}/items.csv
+scenarios:
+  simple:
+    variables:
+      nbVu: 10
+      rampUp: 10
+      ezpublish: false
+    script: tsme_jmeter_web_cmp.jmx
+    plugins:
+      - jpgc-json=2.2
+      - jmeter-ftp
+      - jpgc-casutg

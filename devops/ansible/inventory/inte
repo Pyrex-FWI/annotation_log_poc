@@ -1,0 +1,14 @@
+[azure]
+suez-azu-tsme-web-1i.suez.lbn.fr
+
+[webservers_inte:children]
+azure
+
+[webserver_master:children]
+webservers_inte
+
+[webservers:children]
+webservers_inte
+
+[inte:children]
+webservers_inte

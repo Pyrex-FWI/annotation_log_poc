@@ -1,0 +1,11 @@
+_csvEmail, _csvContractRef, _csvSite, _csvEdmc,_csvInsee,_csvTdbAlerte,_csvTdbDegus, extra_comm
+demolde1pp@yopmail.com,5382482704,ebdm.pp.suez.lbn.fr,PESSAC-33318/accueil,33318, false,true,OK_CEL
+demolde2pp@yopmail.com,4135211111,suez.pp.suez.lbn.fr,AUXONNE-21038/accueil,21038, true,true,login_KO
+demolde3pp@yopmail.com,8557327290,ebdm.pp.suez.lbn.fr,FOLEMBRAY-02318/accueil,2318,false,true,OK_CEL
+demolde4pp@yopmail.com,3029242014,suez.pp.suez.lbn.fr,'SAINT-RAMBERT-D''ALBON-26325/accueil',26325, false,true,OK_CEL
+demolde5pp@yopmail.com,2457727470,ebdm.pp.suez.lbn.fr,BORDEAUX-33063/accueil,33063, false,true,OK_CEL
+demolde6pp@yopmail.com,1773622222,suez.pp.suez.lbn.fr,VILLENEUVE-LA-GARENNE-92078/accueil,92078,true,true,OK_CEL
+demolde7pp@yopmail.com,7817624635,orle.pp.suez.lbn.fr,ORLÉANS-45234/accueil,45234,true,false, OK_CEL
+democc1pp@yopmail.com,1351910000,suez.pp.suez.lbn.fr,ANZIN-59014/accueil,59014,true,true, OK_CEL
+democc2pp@yopmail.com,6953266258,ebdm.pp.suez.lbn.fr,BEAUCHÊNE-61031/accueil,61031,false,true, OK_CEL
+democc3pp@yopmail.com,2601960896,step.pp.suez.lbn.fr,SAINT-ÉTIENNE-42218/accueil,42218,false,true,OK_CEL

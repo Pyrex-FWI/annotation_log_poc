@@ -1,0 +1,14 @@
+---
+- name: "Clear cache"
+  command: "{{ project_php_bin }} -dmemory_limit=-1 bin/console cache:clear --no-warmup --env={{ project_env_mode }}"
+  args:
+    chdir: "{{ project_source_path }}"
+  become: true
+  become_user: "{{ project_web_user }}"
+
+- name: "Warmup cache"
+  command: "{{ project_php_bin }} -dmemory_limit=-1 bin/console cache:warmup --env={{ project_env_mode }}"
+  args:
+    chdir: "{{ project_source_path }}"
+  become: true
+  become_user: "{{ project_web_user }}"

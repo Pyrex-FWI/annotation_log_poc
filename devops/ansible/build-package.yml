@@ -1,0 +1,41 @@
+##############
+# Todo finish?
+##############
+
+- hosts: webservers_local
+  connection: local
+  gather_facts: false
+  vars:
+    ansible_connection: local
+    package_name: "TSME-PART-v{{release_tag}}.tar.gz"
+  tasks:
+    - name: "Check release_tag"
+      fail: msg='You must provide a 'release_tag' variable in -e = "release_tag=0.1.1"'
+      when: release_tag is not defined
+
+    - name: "Check target_env"
+      fail: msg="You must provide a 'target_env' variable in -e = \"target_env=inte\""
+      when: target_env not in env_pool
+
+    - name: "Check target_branch"
+      fail: msg="You must provide a 'target_branch' variable in -e = \"target_branch=master\""
+      when: target_branch is not defined
+
+    - name: "Create temp dir"
+      file:
+        state: directory
+        path: "{{ local_build_dir }}/dist"
+
+    - name: "Checkout release {{target_branch}}"
+      git:
+        repo: "{{git_ssh_repository}}"
+        dest: "{{local_build_dir}}/dist"
+        version: "{{target_branch}}"
+        force: true
+        depth: 1
+      ignore_errors: yes
+      become: no
+
+    - include: "includes/build-release.yml"
+      vars:
+        working_dir: "{{local_build_dir}}/dist"

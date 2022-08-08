@@ -1,0 +1,113 @@
+FROM php:7.4-fpm-buster as base
+WORKDIR "/usr/var/www"
+
+# Fix debconf warnings upon build
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install selected extensions and other stuff
+RUN apt-get update && \
+    apt-get -y --no-install-recommends install \
+    git procps wget telnet curl apt-transport-https imagemagick unzip locales graphviz libldap2-dev rsync
+    # Human Language and Character Encoding Support:
+RUN apt-get -y update \
+    && apt-get install -y libicu-dev \
+    && docker-php-ext-configure intl \
+    && docker-php-ext-install intl
+# SOAP
+RUN apt-get -y update \
+    && apt-get install -y --no-install-recommends libxml2-dev \
+    && docker-php-ext-configure soap \
+    && docker-php-ext-install soap
+# Zip
+RUN apt-get install -y \
+        libzip-dev \
+        zip \
+    && docker-php-ext-install zip
+#Mysql
+RUN apt-get -y update \
+    && docker-php-ext-install pdo_mysql
+#AMQP
+RUN apt-get -y update \
+    && apt install -y librabbitmq-dev \
+    && pecl install amqp \
+    && docker-php-ext-enable amqp
+# bcmath
+RUN apt-get -y update \
+    && docker-php-ext-configure bcmath \
+    && docker-php-ext-install bcmath
+# sockets
+RUN apt-get -y update \
+    && docker-php-ext-configure sockets \
+    && docker-php-ext-install sockets
+#xsl
+RUN apt-get -y update \
+    && apt-get install --no-install-recommends -y libxslt1-dev \
+    && docker-php-ext-configure xsl &&  docker-php-ext-install xsl
+#memcached
+RUN apt-get install -y --no-install-recommends \
+    libmemcached-dev && \
+    pecl install memcached \
+    && docker-php-ext-enable memcached && \
+    apt-get install -y --no-install-recommends libpng-dev libfreetype6-dev libjpeg-dev zlib1g-dev
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    # needed for gd
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get -y update \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j "$(nproc)" gd
+
+RUN apt-get -y update \
+    && docker-php-ext-install opcache
+
+RUN apt-get -y update \
+    && docker-php-ext-install ldap
+
+RUN apt-get -y update \
+    && docker-php-ext-install pcntl
+
+RUN apt-get -y update \
+    && docker-php-ext-install shmop
+
+RUN apt-get -y update \
+    && docker-php-ext-install calendar \
+    && docker-php-ext-configure calendar \
+    && echo "fr_FR.UTF-8 UTF-8" > /etc/locale.gen && locale-gen fr_FR.UTF-8
+###########################################################################
+# INSTALL JAVA for assetic:dump
+###########################################################################
+RUN apt-get -y update \
+    && mkdir -p /usr/share/man/man1 \
+    && apt-get install -y --no-install-recommends openjdk-11-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG fr_FR.UTF-8
+
+COPY --from=composer:1.10 /usr/bin/composer /usr/bin/composer
+
+ARG INCLUDE_NODE=false
+RUN if [ ${INCLUDE_NODE} = true ]; then \
+    curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh \
+    && bash ./nodesource_setup.sh \
+    && apt-get install --no-install-recommends nodejs -y \
+    && rm nodesource_setup.sh \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update &&  apt-get install --no-install-recommends yarn -y  && rm -rf /var/lib/apt/lists/* \
+;fi
+
+ADD php.ini /usr/local/etc/php/conf.d/99-php.ini
+RUN composer global require hirak/prestissimo
+
+## Xdebug
+FROM base as xdebug
+RUN pecl install xdebug  && \
+    docker-php-ext-enable xdebug
+
+RUN apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+

@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    environment {
+        currentBuildDir = "${pwd()}/build_current"
+        lowestBuildDir = "${pwd()}/build_lowest"
+    }
+    stages {
+        stage('Parallel tests') {
+            parallel {
+                stage('EzPublish') {
+                    stages {
+                        stage('load') {
+                            steps {
+                                build job: 'TSME-EZPUBLISH-LOAD-slave', parameters: [string(name: 'JSCENARIO', value: "${params.JSCENARIO}"), string(name: 'CEL_CONCURENCY', value: "${params.CEL_CONCURENCY}"), string(name: 'RAMPUP', value: "${params.RAMPUP}"), string(name: 'USERSPROFILPATH', value: "${params.USERSPROFILPATH}"), string(name: 'LOOP', value: "${params.LOOP}"), string(name: 'EZPUBLISH', value: 'True')], propagate: false
+                            }
+                        }
+                    }
+                }
+
+                stage('EzPlatform') {
+                    stages {
+                        stage('Load') {
+                            steps {
+                                build job: 'TSME-EZPLATFORM-LOAD-slave', parameters: [string(name: 'JSCENARIO', value: "${params.JSCENARIO}"), string(name: 'CEL_CONCURENCY', value: "${params.CEL_CONCURENCY}"), string(name: 'RAMPUP', value: "${params.RAMPUP}"), string(name: 'USERSPROFILPATH', value: "${params.USERSPROFILPATH}"), string(name: 'LOOP', value: "${params.LOOP}"), string(name: 'EZPUBLISH', value: 'False')], propagate: false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+//    post {
+//        success {
+//            dir(currentBuildDir) {
+//                junit 'build/logs/junit.xml'
+//                publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'build/coverage', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: 'Code coverage report'])
+//            }
+//        }
+//    }
+}

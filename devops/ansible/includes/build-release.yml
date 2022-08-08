@@ -1,0 +1,53 @@
+---
+- name: "Create dist dir"
+  file:
+    state: directory
+    path: "{{ local_build_dir }}/dist"
+
+- name: Find /var/log all directories, exclude nginx and mysql
+  find:
+    paths: "{{ working_dir }}"
+    recurse: yes
+    file_type: directory
+    patterns: '.git'
+    hidden: yes
+  register: dirs_to_exclude
+
+- name: Update API version
+  lineinfile:
+    path: "{{ working_dir }}/config/version.yaml"
+    regexp: '^(\s+)api_version:.*'
+    line: '\1api_version: {{ release_tag }}'
+    backrefs: yes
+
+- name: Update API release date
+  lineinfile:
+    path: "{{ working_dir }}/config/version.yaml"
+    regexp: '^(\s+)api_release_date:.*'
+    line: '\1api_release_date: {{ time_suffix }}'
+    backrefs: yes
+
+- name: Exclude files and dirs
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ dirs_to_exclude.files }}"
+
+- name: Remove obsoletes files
+  file:
+    path: "{{ working_dir }}/{{ item }}"
+    state: absent
+  with_items: "{{ dev_items_to_remove }}"
+
+- name: "Copy infrastructure services conf for {{ target_env }} env"
+  copy:
+    src: "{{ working_dir }}/config/infrastructure/services_{{  target_env }}.yaml"
+    dest: "{{ working_dir }}/config/services_{{  target_env }}.yaml"
+
+- name: "Compress directory {{ working_dir }} into {{ local_build_dir }}/dist/{{package_name}}.tgz"
+  archive:
+    path: "{{ working_dir }}/"
+    dest: "{{ local_build_dir }}/dist/{{package_name}}"
+
+- debug:
+    msg: "{{ package_name }}"
